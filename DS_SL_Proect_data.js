@@ -2153,7 +2153,7 @@ function openNotePopup(recId, tempId, title, memo, mode){
       metas[m].textContent = (cnt === 1 ? '1 project' : (cnt + ' projects'));
 
       var sec = document.getElementById('sec_' + g);
-      if (sec) sec.style.display = cnt ? '' : 'none';
+      if (sec) sec.style.display = '';
     }
   }
 
