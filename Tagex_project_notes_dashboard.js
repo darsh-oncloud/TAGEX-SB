@@ -29,34 +29,48 @@ define(['N/log', 'N/search', 'N/url'], function (log, search, url) {
       log.debug('Existing notes search start', { projectId: projectId });
 
       search.create({
-        type: 'customrecord_project',
+        type: 'note',
         filters: [
-          ['internalidnumber', 'equalto', projectId]
+          ['recordtype', 'anyof', PROJECT_RECORD_TYPE_ID],
+          'AND',
+          ['record', 'anyof', projectId]
         ],
         columns: [
-          search.createColumn({ name: 'notetype', join: 'userNotes' }),
-          search.createColumn({ name: 'title', join: 'userNotes' }),
-          search.createColumn({ name: 'note', join: 'userNotes' }),
-          search.createColumn({ name: 'internalid', join: 'userNotes' }),
-          search.createColumn({ name: 'direction', join: 'userNotes' }),
-          search.createColumn({ name: 'notedate', join: 'userNotes' }),
-          search.createColumn({ name: 'author', join: 'userNotes' })
+          search.createColumn({ name: 'notedate', sort: search.Sort.DESC }),
+          search.createColumn({ name: 'time' }),
+          search.createColumn({ name: 'title' }),
+          search.createColumn({ name: 'note' }),
+          search.createColumn({ name: 'notetype' }),
+          search.createColumn({ name: 'direction' }),
+          search.createColumn({ name: 'author' }),
+          search.createColumn({ name: 'internalid' })
         ]
       }).run().each(function (r) {
-        var noteId = r.getValue({ name: 'internalid', join: 'userNotes' }) || '';
+        var noteId = r.getValue({ name: 'internalid' }) || '';
+        var noteUrl = '';
 
-        if (!noteId) return true;
+        if (noteId) {
+          try {
+            noteUrl = url.resolveRecord({
+              recordType: 'note',
+              recordId: noteId,
+              isEditMode: false
+            });
+          } catch (e) {
+            noteUrl = '/app/crm/common/note.nl?id=' + encodeURIComponent(noteId);
+          }
+        }
 
         notes.push({
           id: noteId,
-          title: r.getValue({ name: 'title', join: 'userNotes' }) || '',
-          memo: r.getValue({ name: 'note', join: 'userNotes' }) || '',
-          type: r.getText({ name: 'notetype', join: 'userNotes' }) || '',
-          direction: r.getText({ name: 'direction', join: 'userNotes' }) || '',
-          date: r.getValue({ name: 'notedate', join: 'userNotes' }) || '',
-          time: '',
-          author: r.getText({ name: 'author', join: 'userNotes' }) || '',
-          url: '/app/crm/common/note.nl?id=' + encodeURIComponent(noteId)
+          title: r.getValue({ name: 'title' }) || '',
+          memo: r.getValue({ name: 'note' }) || '',
+          type: r.getText({ name: 'notetype' }) || '',
+          direction: r.getText({ name: 'direction' }) || '',
+          date: r.getValue({ name: 'notedate' }) || '',
+          time: r.getValue({ name: 'time' }) || '',
+          author: r.getText({ name: 'author' }) || '',
+          url: noteUrl
         });
 
         return notes.length < 50;
@@ -131,15 +145,13 @@ define(['N/log', 'N/search', 'N/url'], function (log, search, url) {
     var request = context.request;
     var p = request.parameters || {};
     var projectId = p.projectid || '';
-    var mode = p.mode || 'add';
     var existingNotes = getExistingNotes(projectId);
 
     log.debug('Note Popup Opened', {
       projectId: projectId,
       noteId: p.noteid || '',
       tempId: p.tempid || '',
-      existingCount: existingNotes.length,
-      mode: mode
+      existingCount: existingNotes.length
     });
 
     var html = '';
@@ -189,7 +201,6 @@ define(['N/log', 'N/search', 'N/url'], function (log, search, url) {
     html += '<span class="more-actions">More Actions</span>';
     html += '</div>';
 
-    if (mode !== 'view') {
     html += '<div class="form-area">';
     html += '<div class="left-form">';
 
@@ -229,7 +240,6 @@ define(['N/log', 'N/search', 'N/url'], function (log, search, url) {
     html += '<div class="hint">This note is added to dashboard first. It is saved to Project only after dashboard Submit.</div>';
     html += '</div>';
     html += '</div>';
-    }
 
     html += buildExistingNotesHtml(existingNotes);
 
