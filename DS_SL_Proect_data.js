@@ -1032,7 +1032,6 @@ var noteId = noteRec.save({
               <td class="wrap note-cell-wrap">
                 <div class="note-draft-list" data-note-box="${escHtml(row.recId)}"></div>
                 <button type="button" class="note-add-btn btn-add-note" data-recid="${escHtml(row.recId)}">+ Add Note</button>
-                <button type="button" class="note-add-btn btn-view-note" data-recid="${escHtml(row.recId)}" style="margin-left:6px;">View Notes</button>
               </td>
             </tr>
           `;
@@ -1629,13 +1628,12 @@ var noteId = noteRec.save({
     return 'tmp_' + new Date().getTime() + '_' + Math.floor(Math.random() * 100000);
   }
 
-  function openNotePopup(recId, tempId, title, memo, mode){
+  function openNotePopup(recId, tempId, title, memo){
     var popupUrl = NOTE_POPUP_URL
       + '&projectid=' + encodeURIComponent(recId || '')
       + '&tempid=' + encodeURIComponent(tempId || '')
       + '&title=' + encodeURIComponent(title || '')
       + '&memo=' + encodeURIComponent(memo || '');
-      + '&mode=' + encodeURIComponent(mode || 'add');
 
     console.log('Opening note popup', { recId: recId, tempId: tempId });
     window.open(popupUrl, 'project_note_popup_' + (recId || ''), 'width=720,height=560,resizable=yes,scrollbars=yes');
@@ -2260,13 +2258,8 @@ var noteId = noteRec.save({
     document.addEventListener('click', function(e){
       var addBtn = e.target.closest('.btn-add-note');
       if (addBtn) {
-        openNotePopup(addBtn.getAttribute('data-recid'), '', '', '', 'add');
+        openNotePopup(addBtn.getAttribute('data-recid'), '', '', '');
         return;
-      
-        var viewBtn = e.target.closest('.btn-view-note');
-       if (viewBtn) {
-       openNotePopup(viewBtn.getAttribute('data-recid'), '', '', '', 'view');
-      return;
       }
 
       var editBtn = e.target.closest('.btn-edit-note');
