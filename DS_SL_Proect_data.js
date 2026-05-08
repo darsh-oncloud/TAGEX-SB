@@ -20,43 +20,41 @@ define(['N/ui/serverWidget', 'N/search', 'N/record', 'N/redirect', 'N/runtime', 
       var values = [];
 
       try {
-        var lookup = search.lookupFields({
+        var parentRec = record.load({
           type: parentRecordType,
           id: parentId,
-          columns: [fieldId]
+          isDynamic: false
         });
 
-        var fieldValue = lookup[fieldId];
+        var valueArr = parentRec.getValue({ fieldId: fieldId }) || [];
+        var textArr = parentRec.getText({ fieldId: fieldId }) || [];
 
-        if (fieldValue && Object.prototype.toString.call(fieldValue) === '[object Array]') {
-          for (var i = 0; i < fieldValue.length; i++) {
-            values.push({
-              id: fieldValue[i].value || '',
-              text: fieldValue[i].text || ''
-            });
-          }
-        } else if (fieldValue && fieldValue.value) {
+        if (Object.prototype.toString.call(valueArr) !== '[object Array]') {
+          valueArr = valueArr ? [valueArr] : [];
+        }
+
+        if (Object.prototype.toString.call(textArr) !== '[object Array]') {
+          textArr = textArr ? [textArr] : [];
+        }
+
+        for (var i = 0; i < valueArr.length; i++) {
           values.push({
-            id: fieldValue.value || '',
-            text: fieldValue.text || ''
+            id: valueArr[i] || '',
+            text: textArr[i] || valueArr[i] || ''
           });
         }
       } catch (e) {
         values = [];
       }
 
-      if (!values.length) return escHtml(fallbackText || '');
+      if (!values.length) {
+        var fallback = fallbackText || '';
+        if (!fallback) return '';
 
-      var html = '';
+        return '<div style="white-space:normal;word-break:normal;overflow-wrap:normal;line-height:1.45;">' + escHtml(fallback) + '</div>';
+      }
 
-      html += '<table style="width:100%;border-collapse:collapse;border:1px solid #cbd5e1;background:#ffffff;font-size:12px;">';
-      html += '<thead>';
-      html += '<tr>';
-      html += '<th style="width:35px;padding:5px 6px;border:1px solid #cbd5e1;background:#f1f5f9;color:#475569;text-align:center;font-weight:900;">#</th>';
-      html += '<th style="padding:5px 6px;border:1px solid #cbd5e1;background:#f1f5f9;color:#475569;text-align:left;font-weight:900;">' + escHtml(headerLabel || 'Record') + '</th>';
-      html += '</tr>';
-      html += '</thead>';
-      html += '<tbody>';
+      var html = '<div style="white-space:normal;word-break:normal;overflow-wrap:normal;line-height:1.45;min-width:180px;">';
 
       for (var k = 0; k < values.length; k++) {
         var recId = String(values[k].id || '').trim();
@@ -75,22 +73,18 @@ define(['N/ui/serverWidget', 'N/search', 'N/record', 'N/redirect', 'N/runtime', 
           }
         }
 
-        html += '<tr>';
-        html += '<td style="padding:5px 6px;border:1px solid #cbd5e1;text-align:center;color:#64748b;font-weight:800;">' + (k + 1) + '</td>';
-        html += '<td style="padding:5px 6px;border:1px solid #cbd5e1;line-height:1.25;">';
+        html += '<div style="margin:0 0 3px 0;display:block;">';
 
         if (recUrl) {
-          html += '<a href="' + escHtml(recUrl) + '" target="_blank" style="color:#2563eb;font-weight:900;text-decoration:none;">' + escHtml(recText || recId) + '</a>';
+          html += '<a href="' + escHtml(recUrl) + '" target="_blank" style="color:#2563eb;font-weight:900;text-decoration:underline;white-space:normal;word-break:normal;overflow-wrap:normal;">' + escHtml(recText || recId) + '</a>';
         } else {
           html += escHtml(recText || recId);
         }
 
-        html += '</td>';
-        html += '</tr>';
+        html += '</div>';
       }
 
-      html += '</tbody>';
-      html += '</table>';
+      html += '</div>';
       return html;
     }
 
@@ -1027,8 +1021,8 @@ var noteId = noteRec.save({
           <th data-sort-col="6" data-sort-type="select" style="width:220px;">Action Status <span class="sort-arrow">⇅</span></th>
           <th style="width:110px;">Project Teased</th>
           <th style="width:110px;">FI Requested</th>
-          <th data-sort-col="7" data-sort-type="text" style="width:240px;">Location <span class="sort-arrow">⇅</span></th>
-          <th data-sort-col="8" data-sort-type="text" style="width:180px;">Events <span class="sort-arrow">⇅</span></th>
+          <th data-sort-col="7" data-sort-type="text" style="width:320px;min-width:320px;">Location <span class="sort-arrow">⇅</span></th>
+          <th data-sort-col="8" data-sort-type="text" style="width:280px;min-width:280px;">Events <span class="sort-arrow">⇅</span></th>
           <th style="width:260px;">Notes</th>
         </tr>
       </thead>
@@ -1095,10 +1089,10 @@ var noteId = noteRec.save({
                   ${row.fiRequested === 'T' ? 'checked' : ''}>
               </td>
 
-              <td class="wrap">
+              <td class="wrap" style="min-width:320px;max-width:420px;">
                 ${row.locationHtml || escHtml(row.location)}
               </td>
-              <td class="wrap">
+              <td class="wrap" style="min-width:280px;max-width:380px;">
                 ${row.eventsHtml || escHtml(row.events)}
               </td>
 
