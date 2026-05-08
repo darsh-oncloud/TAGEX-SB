@@ -16,7 +16,7 @@ define(['N/ui/serverWidget', 'N/search', 'N/record', 'N/redirect', 'N/runtime', 
     }
 
 
-    function buildRecordLinksTableFromLookup(parentRecordType, parentId, fieldId, childRecordType, fallbackText, fallbackValue) {
+    function buildRecordLinksTableFromLookup(parentRecordType, parentId, fieldId, childRecordType, fallbackText, fallbackValue, headerLabel) {
       var values = [];
 
       try {
@@ -47,7 +47,16 @@ define(['N/ui/serverWidget', 'N/search', 'N/record', 'N/redirect', 'N/runtime', 
 
       if (!values.length) return escHtml(fallbackText || '');
 
-      var html = '<table style="width:100%;border-collapse:collapse;">';
+      var html = '';
+
+      html += '<table style="width:100%;border-collapse:collapse;border:1px solid #cbd5e1;background:#ffffff;font-size:12px;">';
+      html += '<thead>';
+      html += '<tr>';
+      html += '<th style="width:35px;padding:5px 6px;border:1px solid #cbd5e1;background:#f1f5f9;color:#475569;text-align:center;font-weight:900;">#</th>';
+      html += '<th style="padding:5px 6px;border:1px solid #cbd5e1;background:#f1f5f9;color:#475569;text-align:left;font-weight:900;">' + escHtml(headerLabel || 'Record') + '</th>';
+      html += '</tr>';
+      html += '</thead>';
+      html += '<tbody>';
 
       for (var k = 0; k < values.length; k++) {
         var recId = String(values[k].id || '').trim();
@@ -66,7 +75,9 @@ define(['N/ui/serverWidget', 'N/search', 'N/record', 'N/redirect', 'N/runtime', 
           }
         }
 
-        html += '<tr><td style="padding:2px 0;border:0;line-height:1.25;">';
+        html += '<tr>';
+        html += '<td style="padding:5px 6px;border:1px solid #cbd5e1;text-align:center;color:#64748b;font-weight:800;">' + (k + 1) + '</td>';
+        html += '<td style="padding:5px 6px;border:1px solid #cbd5e1;line-height:1.25;">';
 
         if (recUrl) {
           html += '<a href="' + escHtml(recUrl) + '" target="_blank" style="color:#2563eb;font-weight:900;text-decoration:none;">' + escHtml(recText || recId) + '</a>';
@@ -74,9 +85,11 @@ define(['N/ui/serverWidget', 'N/search', 'N/record', 'N/redirect', 'N/runtime', 
           html += escHtml(recText || recId);
         }
 
-        html += '</td></tr>';
+        html += '</td>';
+        html += '</tr>';
       }
 
+      html += '</tbody>';
       html += '</table>';
       return html;
     }
@@ -417,11 +430,11 @@ var noteId = noteRec.save({
 
         var location = r.getText('custrecord_associated_location') || '';
         var locationVal = r.getValue('custrecord_associated_location') || '';
-        var locationHtml = buildRecordLinksTableFromLookup('customrecord_project', recId, 'custrecord_associated_location', 'location', location, locationVal);
+        var locationHtml = buildRecordLinksTableFromLookup('customrecord_project', recId, 'custrecord_associated_location', 'location', location, locationVal, 'Location');
 
         var events = r.getText('custrecord_affiliated_events') || '';
         var eventsVal = r.getValue('custrecord_affiliated_events') || '';
-        var eventsHtml = buildRecordLinksTableFromLookup('customrecord_project', recId, 'custrecord_affiliated_events', 'calendarevent', events, eventsVal);
+        var eventsHtml = buildRecordLinksTableFromLookup('customrecord_project', recId, 'custrecord_affiliated_events', 'calendarevent', events, eventsVal, 'Event');
         var projTeased = r.getValue('custrecord_projteased') || 'F';
         var fiRequested = r.getValue('custrecord_firequested') || 'F';
 
