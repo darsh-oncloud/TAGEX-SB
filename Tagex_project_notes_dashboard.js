@@ -1,14 +1,8 @@
 /**
  * @NApiVersion 2.1
  * @NScriptType Suitelet
- *
- * Purpose:
- * Popup page used by Project Dashboard to add/edit draft notes before main dashboard Submit.
- * Also shows existing notes already saved on the Project record.
  */
-define(['N/log', 'N/search', 'N/url'], function (log, search, url) {
-
-  var PROJECT_RECORD_TYPE_ID = '2670';
+define(['N/log', 'N/search'], function (log, search) {
 
   function esc(s) {
     s = (s == null ? '' : String(s));
@@ -18,6 +12,29 @@ define(['N/log', 'N/search', 'N/url'], function (log, search, url) {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  }
+
+  function getNoteTypeText(val) {
+    val = String(val || '');
+    var map = {
+      '2': 'Conference Call',
+      '3': 'An email.',
+      '4': 'A fax.',
+      '5': 'A letter.',
+      '6': 'Meeting',
+      '7': 'Note',
+      '8': 'Phone Call'
+    };
+    return map[val] || val;
+  }
+
+  function getDirectionText(val) {
+    val = String(val || '');
+    var map = {
+      '1': 'Incoming',
+      '2': 'Outgoing'
+    };
+    return map[val] || val;
   }
 
   function getExistingNotes(projectId) {
@@ -47,12 +64,15 @@ define(['N/log', 'N/search', 'N/url'], function (log, search, url) {
 
         if (!noteId) return true;
 
+        var typeVal = r.getValue({ name: 'notetype', join: 'userNotes' }) || '';
+        var directionVal = r.getValue({ name: 'direction', join: 'userNotes' }) || '';
+
         notes.push({
           id: noteId,
           title: r.getValue({ name: 'title', join: 'userNotes' }) || '',
           memo: r.getValue({ name: 'note', join: 'userNotes' }) || '',
-          type: r.getText({ name: 'notetype', join: 'userNotes' }) || '',
-          direction: r.getText({ name: 'direction', join: 'userNotes' }) || '',
+          type: r.getText({ name: 'notetype', join: 'userNotes' }) || getNoteTypeText(typeVal),
+          direction: r.getText({ name: 'direction', join: 'userNotes' }) || getDirectionText(directionVal),
           date: r.getValue({ name: 'notedate', join: 'userNotes' }) || '',
           time: '',
           author: r.getText({ name: 'author', join: 'userNotes' }) || '',
@@ -184,51 +204,55 @@ define(['N/log', 'N/search', 'N/url'], function (log, search, url) {
     html += '<div class="page">';
     html += '<div class="header"><span class="icon"></span><span class="page-title">Note</span></div>';
     html += '<div class="actions-top">';
-    html += '<button type="button" class="btn btn-save" onclick="saveNote();">Save</button>';
+
+    if (mode !== 'view') {
+      html += '<button type="button" class="btn btn-save" onclick="saveNote();">Save</button>';
+    }
+
     html += '<button type="button" class="btn" onclick="window.close();">Cancel</button>';
     html += '<span class="more-actions">More Actions</span>';
     html += '</div>';
 
     if (mode !== 'view') {
-    html += '<div class="form-area">';
-    html += '<div class="left-form">';
+      html += '<div class="form-area">';
+      html += '<div class="left-form">';
 
-    html += '<div class="label">Title</div>';
-    html += '<input type="text" id="note_title" value="' + esc(p.title || '') + '">';
+      html += '<div class="label">Title</div>';
+      html += '<input type="text" id="note_title" value="' + esc(p.title || '') + '">';
 
-    html += '<div class="label">Type</div>';
-    html += '<select id="note_type">';
-    html += '<option value=""></option>';
-    html += '<option value="2">Conference Call</option>';
-    html += '<option value="3" selected>E-mail</option>';
-    html += '<option value="4">Fax</option>';
-    html += '<option value="5">Letter</option>';
-    html += '<option value="6">Meeting</option>';
-    html += '<option value="7">Note</option>';
-    html += '<option value="8">Phone Call</option>';
-    html += '</select>';
+      html += '<div class="label">Type</div>';
+      html += '<select id="note_type">';
+      html += '<option value=""></option>';
+      html += '<option value="2">Conference Call</option>';
+      html += '<option value="3" selected>E-mail</option>';
+      html += '<option value="4">Fax</option>';
+      html += '<option value="5">Letter</option>';
+      html += '<option value="6">Meeting</option>';
+      html += '<option value="7">Note</option>';
+      html += '<option value="8">Phone Call</option>';
+      html += '</select>';
 
-    html += '<div class="label">Direction</div>';
-    html += '<select id="note_direction">';
-    html += '<option value=""></option>';
-    html += '<option value="1" selected>Incoming</option>';
-    html += '<option value="2">Outgoing</option>';
-    html += '</select>';
+      html += '<div class="label">Direction</div>';
+      html += '<select id="note_direction">';
+      html += '<option value=""></option>';
+      html += '<option value="1" selected>Incoming</option>';
+      html += '<option value="2">Outgoing</option>';
+      html += '</select>';
 
-    html += '<div class="label">Date</div>';
-    html += '<input type="text" id="note_date" value="' + esc(new Date().toLocaleDateString()) + '" readonly>';
+      html += '<div class="label">Date</div>';
+      html += '<input type="text" id="note_date" value="' + esc(new Date().toLocaleDateString()) + '" readonly>';
 
-    html += '<div class="label">Time</div>';
-    html += '<input type="text" id="note_time" value="' + esc(new Date().toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'})) + '" readonly>';
+      html += '<div class="label">Time</div>';
+      html += '<input type="text" id="note_time" value="' + esc(new Date().toLocaleTimeString([], {hour: "numeric", minute:"2-digit"})) + '" readonly>';
 
-    html += '</div>';
+      html += '</div>';
 
-    html += '<div class="memo-wrap">';
-    html += '<div class="label">Memo <span class="required">*</span></div>';
-    html += '<textarea id="note_memo">' + esc(p.memo || '') + '</textarea>';
-    html += '<div class="hint">This note is added to dashboard first. It is saved to Project only after dashboard Submit.</div>';
-    html += '</div>';
-    html += '</div>';
+      html += '<div class="memo-wrap">';
+      html += '<div class="label">Memo <span class="required">*</span></div>';
+      html += '<textarea id="note_memo">' + esc(p.memo || '') + '</textarea>';
+      html += '<div class="hint">This note is added to dashboard first. It is saved to Project only after dashboard Submit.</div>';
+      html += '</div>';
+      html += '</div>';
     }
 
     html += buildExistingNotesHtml(existingNotes);
