@@ -1629,17 +1629,17 @@ var noteId = noteRec.save({
     return 'tmp_' + new Date().getTime() + '_' + Math.floor(Math.random() * 100000);
   }
 
-  function openNotePopup(recId, tempId, title, memo, mode){
-    var popupUrl = NOTE_POPUP_URL
-      + '&projectid=' + encodeURIComponent(recId || '')
-      + '&tempid=' + encodeURIComponent(tempId || '')
-      + '&title=' + encodeURIComponent(title || '')
-      + '&memo=' + encodeURIComponent(memo || '');
-      + '&mode=' + encodeURIComponent(mode || 'add');
+function openNotePopup(recId, tempId, title, memo, mode){
+  var popupUrl = NOTE_POPUP_URL
+    + '&projectid=' + encodeURIComponent(recId || '')
+    + '&tempid=' + encodeURIComponent(tempId || '')
+    + '&title=' + encodeURIComponent(title || '')
+    + '&memo=' + encodeURIComponent(memo || '')
+    + '&mode=' + encodeURIComponent(mode || 'add');
 
-    console.log('Opening note popup', { recId: recId, tempId: tempId });
-    window.open(popupUrl, 'project_note_popup_' + (recId || ''), 'width=720,height=560,resizable=yes,scrollbars=yes');
-  }
+  console.log('Opening note popup', { recId: recId, tempId: tempId, mode: mode });
+  window.open(popupUrl, 'project_note_popup_' + (recId || ''), 'width=850,height=650,resizable=yes,scrollbars=yes');
+}
 
   window.receiveProjectNote = function(obj){
     console.log('Received note from popup', obj);
@@ -2257,47 +2257,48 @@ var noteId = noteRec.save({
     var rst = document.getElementById('btn_reset_changes');
     if (rst) rst.addEventListener('click', resetChanges);
 
-    document.addEventListener('click', function(e){
-      var addBtn = e.target.closest('.btn-add-note');
-      if (addBtn) {
-        openNotePopup(addBtn.getAttribute('data-recid'), '', '', '', 'add');
-        return;
-      
-        var viewBtn = e.target.closest('.btn-view-note');
-       if (viewBtn) {
-       openNotePopup(viewBtn.getAttribute('data-recid'), '', '', '', 'view');
-      return;
+document.addEventListener('click', function(e){
+  var addBtn = e.target.closest('.btn-add-note');
+  if (addBtn) {
+    openNotePopup(addBtn.getAttribute('data-recid'), '', '', '', 'add');
+    return;
+  }
+
+  var viewBtn = e.target.closest('.btn-view-note');
+  if (viewBtn) {
+    openNotePopup(viewBtn.getAttribute('data-recid'), '', '', '', 'view');
+    return;
+  }
+
+  var editBtn = e.target.closest('.btn-edit-note');
+  if (editBtn) {
+    var recId = editBtn.getAttribute('data-recid');
+    var tempId = editBtn.getAttribute('data-tempid');
+    var n = getDraftNote(recId, tempId);
+    if (n) {
+      openNotePopup(recId, tempId, n.title || '', n.memo || '', 'add');
+    }
+    return;
+  }
+
+  var removeBtn = e.target.closest('.btn-remove-note');
+  if (removeBtn) {
+    var rId = removeBtn.getAttribute('data-recid');
+    var tId = removeBtn.getAttribute('data-tempid');
+
+    if (NOTE_DRAFTS[rId] && NOTE_DRAFTS[rId].add) {
+      var arr = [];
+      for (var j = 0; j < NOTE_DRAFTS[rId].add.length; j++) {
+        if (NOTE_DRAFTS[rId].add[j].tempId !== tId) arr.push(NOTE_DRAFTS[rId].add[j]);
       }
+      NOTE_DRAFTS[rId].add = arr;
+    }
 
-      var editBtn = e.target.closest('.btn-edit-note');
-      if (editBtn) {
-        var recId = editBtn.getAttribute('data-recid');
-        var tempId = editBtn.getAttribute('data-tempid');
-        var n = getDraftNote(recId, tempId);
-        if (n) {
-          openNotePopup(recId, tempId, n.title || '', n.memo || '');
-        }
-        return;
-      }
-
-      var removeBtn = e.target.closest('.btn-remove-note');
-      if (removeBtn) {
-        var rId = removeBtn.getAttribute('data-recid');
-        var tId = removeBtn.getAttribute('data-tempid');
-
-        if (NOTE_DRAFTS[rId] && NOTE_DRAFTS[rId].add) {
-          var arr = [];
-          for (var j = 0; j < NOTE_DRAFTS[rId].add.length; j++) {
-            if (NOTE_DRAFTS[rId].add[j].tempId !== tId) arr.push(NOTE_DRAFTS[rId].add[j]);
-          }
-          NOTE_DRAFTS[rId].add = arr;
-        }
-
-        renderNoteDrafts(rId);
-        renderChangeBox();
-        return;
-      }
-    }, true);
+    renderNoteDrafts(rId);
+    renderChangeBox();
+    return;
+  }
+}, true);
   }
 
   initEditors();
