@@ -1048,7 +1048,7 @@ if (locationVal && String(locationVal).indexOf(',') === -1) {
 
               <td class="wrap note-cell-wrap">
                 <div class="note-draft-list" data-note-box="${escHtml(row.recId)}"></div>
-                <button type="button" class="note-add-btn btn-add-note" data-recid="${escHtml(row.recId)}">+ Add Note</button>
+                <button type="button" class="note-add-btn btn-add-note" data-recid="${escHtml(row.recId)}">+</button>
                 <button type="button" class="note-add-btn btn-view-note" data-recid="${escHtml(row.recId)}" style="margin-left:6px;">View Notes</button>
               </td>
             </tr>
