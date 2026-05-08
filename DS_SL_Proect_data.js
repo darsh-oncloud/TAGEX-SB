@@ -350,6 +350,20 @@ var noteId = noteRec.save({
         if (!groupNameSet[projectStatusText]) return true;
 
         var location = r.getText('custrecord_associated_location') || '';
+        var locationVal = r.getValue('custrecord_associated_location') || '';
+var locationUrl = '';
+
+if (locationVal && String(locationVal).indexOf(',') === -1) {
+  try {
+    locationUrl = url.resolveRecord({
+      recordType: 'location',
+      recordId: locationVal,
+      isEditMode: false
+    });
+  } catch (e) {
+    locationUrl = '';
+  }
+}
 
         var events = r.getText('custrecord_affiliated_events') || '';
         var eventsVal = r.getValue('custrecord_affiliated_events') || '';
@@ -393,6 +407,7 @@ var noteId = noteRec.save({
           projectStatusVal: projectStatusVal,
           projectStatusText: projectStatusText,
           location: location,
+          locationUrl: locationUrl,
           events: events,
           eventsUrl: eventsUrl,
           projTeased: projTeased,
@@ -1024,7 +1039,9 @@ var noteId = noteRec.save({
                   ${row.fiRequested === 'T' ? 'checked' : ''}>
               </td>
 
-              <td class="wrap">${escHtml(row.location)}</td>
+              <td class="wrap">
+                 ${row.locationUrl ? '<a href="' + escHtml(row.locationUrl) + '" target="_blank" style="color:#2563eb;font-weight:900;text-decoration:none;">' + escHtml(row.location) + '</a>' : escHtml(row.location)}
+             </td>
               <td class="wrap">
                 ${row.eventsUrl ? '<a href="' + escHtml(row.eventsUrl) + '" target="_blank" style="color:#2563eb;font-weight:900;text-decoration:none;">' + escHtml(row.events) + '</a>' : escHtml(row.events)}
               </td>
